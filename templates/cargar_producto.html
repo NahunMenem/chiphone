@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión de Productos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    };
+  </script>
+</head>
+<body class="bg-gray-900 text-gray-200 min-h-screen">
+
+  <!-- ✅ Menú superior -->
+  {% if admin %}
+  <button onclick="abrirModalProducto()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+    ➕ Nuevo Producto
+  </button>
+  <a href="/logout" class="ml-4 text-sm underline text-gray-400 hover:text-white">Cerrar sesión</a>
+{% else %}
+  <a href="/login" class="text-sm underline text-gray-400 hover:text-white">Admin</a>
+{% endif %}
+
+
+  <div class="container mx-auto px-4 py-8 max-w-4xl">
+
+    <!-- 🔍 Buscador -->
+    <form method="GET" action="/cargar_producto" class="mb-6 flex space-x-2">
+      <input
+        type="text"
+        name="buscar"
+        placeholder="🔍 Buscar producto por descripción..."
+        value="{{ filtro }}"
+        class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600"
+      />
+      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold">
+        Buscar
+      </button>
+    </form>
+
+    <!-- 🧾 Vista de productos -->
+    <h2 class="text-2xl font-bold mb-4">Productos Cargados</h2>
+    <div class="grid md:grid-cols-2 gap-4">
+      {% for producto in productos %}
+      <div class="bg-gray-800 rounded-xl shadow p-4">
+        <div class="w-full h-48 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+          <img src="{{ producto.foto }}" class="object-contain w-full h-full">
+        </div>
+        <button type="button" onclick="ampliarImagen('{{ producto.foto }}')" class="mb-3 bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded">
+          🖼️ Ampliar Foto
+        </button>
+        <h3 class="font-bold text-xl">{{ producto.descripcion }}</h3>
+
+        {% if producto.memoria %}
+          <p class="mt-2"><span class="font-medium">Memoria:</span> {{ producto.memoria }}</p>
+        {% endif %}
+        {% if producto.condicion_bateria %}
+          <p><span class="font-medium">Batería:</span> {{ producto.condicion_bateria }}</p>
+        {% endif %}
+
+        <p><span class="font-medium">Estado:</span> {{ producto.estado }}</p>
+        <p><span class="font-medium">Precio:</span> ${{ producto.precio }}</p>
+
+        <a href="/marcar_vendido/{{ producto.id }}" class="mt-4 inline-block bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm">
+          🗑️ Eliminar Producto
+        </a>
+      </div>
+      {% else %}
+        <p class="text-gray-400">No hay productos cargados aún.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- 🪟 Modal para nuevo producto -->
+  <div id="modal-producto" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-xl relative">
+      <button onclick="cerrarModalProducto()" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 rounded-full px-3 py-1 font-bold z-10">
+        ✖
+      </button>
+      <h2 class="text-2xl font-bold mb-4">Nuevo Producto</h2>
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        <div>
+          <label class="block font-medium">Foto del Producto</label>
+          <input type="file" name="foto" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600">
+        </div>
+
+        <div>
+          <label class="block font-medium">Descripción</label>
+          <input type="text" name="descripcion" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: iPhone 13 Pro">
+        </div>
+
+        <div class="flex space-x-4">
+          <div class="flex-1">
+            <label class="block font-medium">Memoria</label>
+            <input type="text" name="memoria" class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: 256 GB">
+          </div>
+          <div class="flex-1">
+            <label class="block font-medium">Condición Batería</label>
+            <input type="text" name="condicion_bateria" class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: 90%">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium">Estado del Producto</label>
+          <select name="estado" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600">
+            <option value="">Seleccionar estado</option>
+            <option value="Sellado">Sellado (Nuevo)</option>
+            <option value="Usado">Usado</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium">Precio ($)</label>
+          <input type="number" step="0.01" name="precio" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: 299.99">
+        </div>
+
+        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow">
+          💾 Guardar Producto
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 🖼 Modal para imagen ampliada -->
+  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition-opacity duration-300">
+    <div id="modal-content" class="relative max-w-3xl w-full scale-95 opacity-0 transition-all duration-300 ease-out">
+      <button type="button" onclick="cerrarModal()" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 rounded-full px-3 py-1 font-bold z-10">
+        ✖
+      </button>
+      <img id="imagen-ampliada" src="" class="w-full max-h-screen object-contain rounded-lg shadow-lg">
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Modal imagen
+    function ampliarImagen(url) {
+      const modal = document.getElementById('modal');
+      const modalContent = document.getElementById('modal-content');
+      const imagen = document.getElementById('imagen-ampliada');
+      imagen.src = url;
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.add('opacity-100');
+        modalContent.classList.remove('opacity-0', 'scale-95');
+        modalContent.classList.add('opacity-100', 'scale-100');
+      }, 10);
+    }
+
+    function cerrarModal() {
+      const modal = document.getElementById('modal');
+      const modalContent = document.getElementById('modal-content');
+      modal.classList.remove('opacity-100');
+      modalContent.classList.remove('opacity-100', 'scale-100');
+      modalContent.classList.add('opacity-0', 'scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') cerrarModal();
+    });
+
+    document.getElementById('modal').addEventListener('click', function (event) {
+      const modalContent = document.getElementById('modal-content');
+      if (!modalContent.contains(event.target)) cerrarModal();
+    });
+
+    // Modal producto
+    function abrirModalProducto() {
+      document.getElementById('modal-producto').classList.remove('hidden');
+    }
+
+    function cerrarModalProducto() {
+      document.getElementById('modal-producto').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
