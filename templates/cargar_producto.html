@@ -1,140 +1,244 @@
+
 <!DOCTYPE html>
 <html lang="es" class="dark">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gestión de Productos</title>
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-    };
+    window.onload = () => { lucide.createIcons(); };
   </script>
+
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    window.onload = () => { lucide.createIcons(); };
+  </script>
+
 </head>
-<body class="bg-gray-900 text-gray-200 min-h-screen">
-
-  <!-- ✅ Menú superior -->
-  {% if admin %}
-  <button onclick="abrirModalProducto()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
-    ➕ Nuevo Producto
-  </button>
-  <a href="/logout" class="ml-4 text-sm underline text-gray-400 hover:text-white">Cerrar sesión</a>
-{% else %}
-  <a href="/login" class="text-sm underline text-gray-400 hover:text-white">Admin</a>
-{% endif %}
-
-
-  <div class="container mx-auto px-4 py-8 max-w-4xl">
-
-    <!-- 🔍 Buscador -->
-    <form method="GET" action="/cargar_producto" class="mb-6 flex space-x-2">
+<body class="bg-gray-950 text-gray-300 min-h-screen">
+  <nav class="bg-gray-800 shadow-md px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <!-- Logo + Título -->
+    <div class="flex items-center gap-3 w-full sm:w-auto">
+      <img src="/static/images/logo.png" alt="Logo" class="h-10 w-auto rounded" /> <!-- Cambiá la ruta a tu logo real -->
+      <h1 class="text-xl font-bold text-white">ChipolaStore</h1>
+    </div>
+  
+    <!-- Buscador -->
+    <form method="GET" action="/cargar_producto" class="flex w-full sm:w-1/2">
       <input
         type="text"
         name="buscar"
-        placeholder="🔍 Buscar producto por descripción..."
+        placeholder="Buscar productos..."
         value="{{ filtro }}"
-        class="flex-1 p-3 bg-gray-800 text-white rounded-lg border border-gray-600"
+        class="w-full p-2 rounded-l-md bg-gray-700 text-white border border-gray-600 focus:outline-none"
       />
-      <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold">
+      <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-r-md font-bold">
         Buscar
       </button>
     </form>
-
-    <!-- 🧾 Vista de productos -->
-    <h2 class="text-2xl font-bold mb-4">Productos Cargados</h2>
-    <div class="grid md:grid-cols-2 gap-4">
-      {% for producto in productos %}
-      <div class="bg-gray-800 rounded-xl shadow p-4">
-        <div class="w-full h-48 bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden mb-3">
-          <img src="{{ producto.foto }}" class="object-contain w-full h-full">
-        </div>
-        <button type="button" onclick="ampliarImagen('{{ producto.foto }}')" class="mb-3 bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded">
-          🖼️ Ampliar Foto
+  
+    <!-- Botones de sesión -->
+    <div class="flex items-center gap-4 justify-end w-full sm:w-auto">
+      {% if admin %}
+      <!-- Botón hamburguesa -->
+      <div class="relative">
+        <button onclick="toggleMenu()" class="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded shadow">
+          <span class="flex items-center gap-2"><i data-lucide="menu" class="w-4 h-4"></i><span>Menú</span></span>
         </button>
-        <h3 class="font-bold text-xl">{{ producto.descripcion }}</h3>
+    
+        <!-- Menú desplegable -->
+         
+        <div id="admin-menu" class="hidden absolute right-0 mt-2 w-48 bg-gray-800 text-white rounded shadow-lg z-50">
+          <a href="/dashboard" class="block px-4 py-2 hover:bg-gray-700 flex items-center gap-2">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i> <span>Dashboard</span>
+          </a> 
+          <a href="/deudores" class="block px-4 py-2 hover:bg-gray-700 flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4"></i> <span>Deudores</span>
+          </a>
+                   
+          <a href="/transacciones" class="block px-4 py-2 hover:bg-gray-700"><span class="flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4"></i><span>Transacciones</span></span></a>
+          <button onclick="abrirModalProducto(); cerrarMenu()" class="w-full text-left px-4 py-2 hover:bg-gray-700"><span class="flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4"></i><span>Nuevo Producto</span></span></button>
+          <a href="/logout" class="block px-4 py-2 hover:bg-gray-700"><span class="flex items-center gap-2"><i data-lucide="lock" class="w-4 h-4"></i><span>Cerrar sesión</span></span></a>
+        </div>
+        
+      </div>
+    {% else %}
+      <a href="/login" class="text-sm underline text-gray-400 hover:text-white">Admin</a>
+    {% endif %}
+    
 
-        {% if producto.memoria %}
-          <p class="mt-2"><span class="font-medium">Memoria:</span> {{ producto.memoria }}</p>
+    </div>
+  </nav>
+  <!-- Categorías visuales -->
+<div class="bg-gray-950 px-4 py-6">
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+    <a href="/cargar_producto?buscar=Celulares" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+      <img src="/static/categorias/celu.png" alt="Celulares" class="h-20 mx-auto object-contain">
+      <h3 class="mt-3 font-semibold text-white">Celulares</h3>
+    </a>
+    <a href="/cargar_producto?buscar=Videojuegos" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+      <img src="/static/categorias/juegos.png" alt="Videojuegos" class="h-20 mx-auto object-contain">
+      <h3 class="mt-3 font-semibold text-white">Videojuegos</h3>
+    </a>
+    <a href="/cargar_producto?buscar=Computadoras" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+      <img src="/static/categorias/compu.png" alt="Computadoras" class="h-20 mx-auto object-contain">
+      <h3 class="mt-3 font-semibold text-white">Computadoras</h3>
+    </a>
+    <a href="/cargar_producto?buscar=Audifonos" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+      <img src="/static/categorias/auris.png" alt="Audífonos" class="h-20 mx-auto object-contain">
+      <h3 class="mt-3 font-semibold text-white">Audífonos</h3>
+    </a>
+    <a href="/cargar_producto?buscar=Smartwatch" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+      <img src="/static/categorias/reloj.png" alt="Smartwatch" class="h-20 mx-auto object-contain">
+      <h3 class="mt-3 font-semibold text-white">Smartwatch</h3>
+    </a>
+  </div>
+</div>
+
+    
+
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+  
+
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      {% for producto in productos %}
+      <div class="bg-gray-800 rounded-xl shadow p-5 space-y-3 flex flex-col justify-between relative">
+        <div class="relative group w-full h-40 sm:h-48 bg-gray-700 rounded-lg overflow-hidden">
+          <img src="{{ producto.foto }}" class="object-contain w-full h-full transition-transform duration-200 group-hover:scale-105" />
+        
+          {% if producto.estado %}
+            <span class="absolute top-2 left-2 bg-gray-800 bg-opacity-75 text-white text-xs font-semibold px-3 py-1 rounded-md shadow-sm uppercase tracking-wide">
+              {{ producto.estado }}
+            </span>
+          {% endif %}
+        
+          <button
+            type="button"
+            onclick="ampliarImagen('{{ producto.foto }}')"
+            class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            title="Ampliar imagen"
+          >
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2"
+                 viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M15 10l4.553-4.553a1.5 1.5 0 012.121 2.121L17.121 12l4.553 4.553a1.5 1.5 0 11-2.121 2.121L15 14m-6 0l-4.553 4.553a1.5 1.5 0 01-2.121-2.121L6.879 12 2.326 7.447a1.5 1.5 0 012.121-2.121L9 10" />
+            </svg>
+          </button>
+        </div>
+        
+        <h3 class="font-bold text-lg sm:text-xl">{{ producto.descripcion }}</h3>
+        {% if producto.memoria %}<p><span class="font-medium">Memoria:</span> {{ producto.memoria }}</p>{% endif %}
+        {% if producto.condicion_bateria %}<p><span class="font-medium">Batería:</span> {{ producto.condicion_bateria }}</p>{% endif %}
+        
+        {% if admin %}
+          <p><span class="font-medium">Costo:</span> ${{ producto.precio_costo }}</p>
+          <p><span class="font-medium">Reventa:</span> ${{ producto.precio_reventa }}</p>
+        {% elif mayorista %}
+          <p><span class="font-medium">Reventa:</span> ${{ producto.precio_reventa }}</p>
         {% endif %}
-        {% if producto.condicion_bateria %}
-          <p><span class="font-medium">Batería:</span> {{ producto.condicion_bateria }}</p>
+
+
+
+        <p><span class="font-medium">Público:</span> ${{ producto.precio_publico }}</p>
+        <p><span class="font-medium">Stock:</span> {{ producto.stock }}</p>
+
+        {% if admin %}
+        <div class="flex flex-col gap-2">
+  <button type="button"
+    onclick="abrirModalVenta({{ producto.id }}, {{ producto.precio_publico }})"
+    class="bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-3 rounded-lg text-sm w-full">
+    <span class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4"></i><span>Marcar como vendido</span></span>
+  </button>
+
+  <form action="/eliminar_producto/{{ producto.id }}" method="POST" onsubmit="return confirm('¿Seguro que querés eliminar esta publicación?');">
+    <button type="submit"
+      class="bg-rose-600 hover:bg-rose-700 text-white py-2 px-3 rounded-lg text-sm w-full">
+      <span class="flex items-center gap-2"><i data-lucide="trash" class="w-4 h-4"></i><span>Eliminar publicación</span></span>
+    </button>
+  </form>
+</div>
+
         {% endif %}
 
-        <p><span class="font-medium">Estado:</span> {{ producto.estado }}</p>
-        <p><span class="font-medium">Precio:</span> ${{ producto.precio }}</p>
+<div class="absolute bottom-3 right-3 z-10">
+  <a
+    href="https://wa.me/5493804315721?text={{ (
+      'Hola, estoy interesado en el producto: ' ~ producto.descripcion
+      ~ (producto.memoria and ' - Memoria: ' ~ producto.memoria or '')
+      ~ (producto.condicion_bateria and ' - Batería: ' ~ producto.condicion_bateria or '')
+      ~ ' - Precio: $' ~ producto.precio_publico
+      ~ ' - Stock: ' ~ producto.stock
+    ) | urlencode }}"
+    target="_blank"
+    class="bg-emerald-500 hover:bg-emerald-600 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-110"
+    title="Lo quiero por WhatsApp"
+  >
+    <i data-lucide="message-circle" class="w-5 h-5"></i>
+  </a>
+</div>
 
-        <a href="/marcar_vendido/{{ producto.id }}" class="mt-4 inline-block bg-red-600 hover:bg-red-700 text-white py-2 px-3 rounded-lg text-sm">
-          🗑️ Eliminar Producto
-        </a>
       </div>
       {% else %}
-        <p class="text-gray-400">No hay productos cargados aún.</p>
+      <p class="text-gray-400">No hay productos cargados aún.</p>
       {% endfor %}
     </div>
   </div>
 
-  <!-- 🪟 Modal para nuevo producto -->
-  <div id="modal-producto" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-    <div class="bg-gray-800 rounded-xl p-6 w-full max-w-xl relative">
-      <button onclick="cerrarModalProducto()" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 rounded-full px-3 py-1 font-bold z-10">
-        ✖
-      </button>
-      <h2 class="text-2xl font-bold mb-4">Nuevo Producto</h2>
-      <form method="POST" enctype="multipart/form-data" class="space-y-4">
-        <div>
-          <label class="block font-medium">Foto del Producto</label>
-          <input type="file" name="foto" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600">
-        </div>
+  
+{% if admin %}
+<div class="sm:hidden fixed bottom-6 right-6 z-50 group">
+  <button onclick="abrirModalProducto()"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-transform duration-200 hover:scale-110"
+    title="Nuevo producto">
+    <i data-lucide="plus" class="w-6 h-6"></i>
+  </button>
+</div>
+{% endif %}
 
-        <div>
-          <label class="block font-medium">Descripción</label>
-          <input type="text" name="descripcion" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: iPhone 13 Pro">
-        </div>
 
-        <div class="flex space-x-4">
-          <div class="flex-1">
-            <label class="block font-medium">Memoria</label>
-            <input type="text" name="memoria" class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: 256 GB">
-          </div>
-          <div class="flex-1">
-            <label class="block font-medium">Condición Batería</label>
-            <input type="text" name="condicion_bateria" class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: 90%">
-          </div>
-        </div>
+  <!-- Modal nuevo producto -->
+  <div id="modal-producto" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-lg relative">
+      <button onclick="cerrarModalProducto()" class="absolute top-2 right-2 text-white bg-rose-600 hover:bg-rose-700 rounded-full px-3 py-1 font-bold"><span class="flex items-center gap-2"><i data-lucide="x" class="w-4 h-4"></i></span></button>
+      <h2 class="text-xl font-bold mb-4 text-center"><span class="flex items-center gap-2"><i data-lucide="plus-circle" class="w-4 h-4"></i><span>Nuevo Producto</span></span></h2>
+      <form action="/cargar_producto" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <input type="text" name="descripcion" placeholder="Descripción" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+        <input type="text" name="memoria" placeholder="Memoria (opcional)" class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+        <input type="text" name="condicion_bateria" placeholder="Condición de batería (opcional)" class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+        <select name="estado" class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
+          <option value="Usado">Usado</option>
+          <option value="Sellado">Sellado</option>
+        </select>
+        <input type="number" name="precio_costo" placeholder="Precio de costo" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+        <input type="number" name="precio_reventa" placeholder="Precio de reventa" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+        <input type="number" name="precio_publico" placeholder="Precio al público" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
 
-        <div>
-          <label class="block font-medium">Estado del Producto</label>
-          <select name="estado" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600">
-            <option value="">Seleccionar estado</option>
-            <option value="Sellado">Sellado (Nuevo)</option>
-            <option value="Usado">Usado</option>
-          </select>
-        </div>
-
-        <div>
-          <label class="block font-medium">Precio ($)</label>
-          <input type="number" step="0.01" name="precio" required class="w-full p-2 bg-gray-700 rounded-lg border border-gray-600" placeholder="Ej: 299.99">
-        </div>
-
-        <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg shadow">
-          💾 Guardar Producto
-        </button>
+        <input type="number" name="stock" placeholder="Stock" required min="1" class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+        <input type="file" name="foto" accept="image/*" required class="w-full p-2 bg-white dark:bg-gray-800" />
+        <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Guardar Producto</button>
       </form>
     </div>
   </div>
 
-  <!-- 🖼 Modal para imagen ampliada -->
+  <!-- Modal imagen -->
   <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 transition-opacity duration-300">
     <div id="modal-content" class="relative max-w-3xl w-full scale-95 opacity-0 transition-all duration-300 ease-out">
-      <button type="button" onclick="cerrarModal()" class="absolute top-2 right-2 text-white bg-red-600 hover:bg-red-700 rounded-full px-3 py-1 font-bold z-10">
-        ✖
-      </button>
-      <img id="imagen-ampliada" src="" class="w-full max-h-screen object-contain rounded-lg shadow-lg">
+      <button onclick="cerrarModal()" class="absolute top-2 right-2 text-white bg-rose-600 hover:bg-rose-700 rounded-full px-3 py-1 font-bold z-10"><span class="flex items-center gap-2"><i data-lucide="x" class="w-4 h-4"></i></span></button>
+      <img id="imagen-ampliada" src="" class="w-full max-h-screen object-contain rounded-lg shadow-lg" />
     </div>
   </div>
 
-  <!-- Scripts -->
   <script>
-    // Modal imagen
+    function abrirModalProducto() {
+      document.getElementById("modal-producto").classList.remove("hidden");
+    }
+    function cerrarModalProducto() {
+      document.getElementById("modal-producto").classList.add("hidden");
+    }
     function ampliarImagen(url) {
       const modal = document.getElementById('modal');
       const modalContent = document.getElementById('modal-content');
@@ -147,7 +251,6 @@
         modalContent.classList.add('opacity-100', 'scale-100');
       }, 10);
     }
-
     function cerrarModal() {
       const modal = document.getElementById('modal');
       const modalContent = document.getElementById('modal-content');
@@ -159,23 +262,91 @@
       }, 300);
     }
 
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape') cerrarModal();
+    // Alerta cuando se guarda o elimina producto
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelector("#modal-producto form")?.addEventListener("submit", () => {
+        alert("✅ Producto guardado exitosamente");
+      });
+      document.querySelectorAll('form[action^="/marcar_vendido/"]').forEach(form => {
+        form.addEventListener("submit", () => {
+          alert("🗑️ Producto eliminado exitosamente");
+        });
+      });
     });
 
-    document.getElementById('modal').addEventListener('click', function (event) {
+    document.getElementById('modal')?.addEventListener('click', function (event) {
       const modalContent = document.getElementById('modal-content');
       if (!modalContent.contains(event.target)) cerrarModal();
     });
-
-    // Modal producto
-    function abrirModalProducto() {
-      document.getElementById('modal-producto').classList.remove('hidden');
+    function abrirModalVenta(id, precio) {
+      document.getElementById('venta-producto-id').value = id;
+      document.getElementById('venta-monto').value = precio;
+      document.getElementById('modal-venta').classList.remove('hidden');
     }
-
-    function cerrarModalProducto() {
-      document.getElementById('modal-producto').classList.add('hidden');
+    function cerrarModalVenta() {
+      document.getElementById('modal-venta').classList.add('hidden');
     }
+    function toggleMenu() {
+      const menu = document.getElementById("admin-menu");
+      menu.classList.toggle("hidden");
+    }
+    
+    function cerrarMenu() {
+      const menu = document.getElementById("admin-menu");
+      if (!menu.classList.contains("hidden")) {
+        menu.classList.add("hidden");
+      }
+    }
+    
+    // Cierra el menú si hacés clic fuera
+    document.addEventListener("click", function(event) {
+      const menu = document.getElementById("admin-menu");
+      const button = event.target.closest("button");
+      const insideMenu = event.target.closest("#admin-menu");
+    
+      if (!insideMenu && (!button || !button.onclick?.toString().includes("toggleMenu"))) {
+        cerrarMenu();
+      }
+    });
+    
   </script>
+  {% if not admin %}
+  <div class="fixed bottom-2 right-2 text-gray-400 text-xs bg-gray-800 bg-opacity-80 px-4 py-2 rounded shadow-md z-50 flex items-center gap-2">
+    <span>Desarrollado por</span>
+    <a href="https://wa.me/5493804315721" target="_blank" class="text-green-400 hover:underline font-semibold">ServiCell</a>
+    <a href="https://wa.me/5493804315721" target="_blank" title="Contactar por WhatsApp">
+      <img src="https://img.icons8.com/ios-filled/20/25D366/whatsapp.png" alt="WhatsApp" />
+    </a>
+  </div>
+{% endif %}
+
+
+<div id="modal-venta" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md relative">
+    <button onclick="cerrarModalVenta()" class="absolute top-2 right-2 text-white bg-rose-600 hover:bg-rose-700 rounded-full px-3 py-1 font-bold"><span class="flex items-center gap-2"><i data-lucide="x" class="w-4 h-4"></i></span></button>
+    <h2 class="text-xl font-bold mb-4 text-center">Registrar venta</h2>
+    <form id="form-venta" method="POST" action="/registrar_venta" class="space-y-4">
+      <input type="hidden" name="producto_id" id="venta-producto-id">
+      <label class="block">Método de pago:</label>
+      <select name="metodo_pago" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Transferencia">Transferencia</option>
+        <option value="Tarjeta">Tarjeta</option>
+      </select>
+      <label class="block">Moneda:</label>
+      <select name="moneda" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
+        <option value="ARS">Pesos (ARS)</option>
+        <option value="USD">Dólares (USD)</option>
+      </select>
+      <label class="block">Monto:</label>
+      <input type="number" name="monto" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" id="venta-monto">
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Registrar</button>
+    </form>
+  </div>
+</div>
+
+  
+  
 </body>
+
 </html>

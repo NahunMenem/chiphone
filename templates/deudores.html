@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <title>Deudores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>window.onload = () => { lucide.createIcons(); };</script>
+</head>
+<body class="bg-gray-950 text-gray-300 min-h-screen">
+  <div class="container mx-auto px-4 py-8 max-w-5xl">
+    <h1 class="text-3xl font-bold mb-6 flex items-center gap-2 text-white">
+      <i data-lucide="alert-triangle" class="w-6 h-6"></i> Deudores
+    </h1>
+
+    <form method="GET" class="mb-6">
+      <input
+        type="text"
+        name="buscar"
+        placeholder="Buscar por nombre o teléfono..."
+        value="{{ request.args.get('buscar', '') }}"
+        class="w-full p-3 rounded bg-gray-800 text-white border border-gray-600"
+      />
+    </form>
+    <!-- Botón para abrir el modal -->
+<div class="text-right mb-4">
+  <button onclick="document.getElementById('modal-deudor').classList.remove('hidden')"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow flex items-center gap-2">
+    <i data-lucide="plus-circle" class="w-4 h-4"></i> Nuevo deudor
+  </button>
+</div>
+
+<!-- Modal de nuevo deudor -->
+<div id="modal-deudor" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md relative">
+    <button onclick="document.getElementById('modal-deudor').classList.add('hidden')"
+      class="absolute top-2 right-2 text-white bg-rose-600 hover:bg-rose-700 rounded-full px-3 py-1 font-bold">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+    <h2 class="text-xl font-bold mb-4 text-center flex items-center justify-center gap-2">
+      <i data-lucide="plus-circle" class="w-5 h-5"></i> Nuevo deudor
+    </h2>
+    <form method="POST" action="/nuevo_deudor" class="space-y-4">
+      <input type="text" name="cliente_nombre" placeholder="Nombre del cliente" required
+        class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+      <input type="text" name="cliente_telefono" placeholder="Teléfono"
+        class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+      <textarea name="descripcion" placeholder="Descripción"
+        class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white"></textarea>
+      <input type="number" name="monto" step="0.01" placeholder="Monto" required
+        class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+      <select name="moneda" required
+        class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
+        <option value="ARS">Pesos (ARS)</option>
+        <option value="USD">Dólares (USD)</option>
+      </select>
+      <input type="date" name="fecha"
+        class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
+      <button type="submit"
+        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+        Guardar
+      </button>
+    </form>
+  </div>
+</div>
+
+
+    
+    {% if session.get('mensaje') %}
+    <div class="mb-4 px-4 py-3 rounded bg-green-700 text-white shadow text-sm flex justify-between items-center">
+      {{ session.get('mensaje') }}
+      <button onclick="this.parentElement.remove()" class="ml-4 text-xs hover:underline">✕</button>
+    </div>
+    {% set _ = session.pop('mensaje') %}
+    {% endif %}
+
+<div class="overflow-x-auto rounded-lg shadow">
+      <table class="min-w-full text-sm text-left text-gray-400">
+        <thead class="bg-gray-800 text-xs uppercase text-gray-300">
+          <tr>
+            <th class="px-4 py-3">Cliente</th>
+            <th class="px-4 py-3">Teléfono</th>
+            <th class="px-4 py-3">Descripción</th>
+            <th class="px-4 py-3">Monto</th>
+            <th class="px-4 py-3">Fecha</th>
+            <th class="px-4 py-3 text-center">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deudores %}
+          <tr class="border-b border-gray-700">
+            <td class="px-4 py-2 font-medium">{{ d.cliente_nombre }}</td>
+            <td class="px-4 py-2">{{ d.cliente_telefono }}</td>
+            <td class="px-4 py-2">{{ d.descripcion }}</td>
+            <td class="px-4 py-2">${{ "%.2f"|format(d.monto) }}</td>
+            <td class="px-4 py-2">{{ d.fecha }}</td>
+            <td class="px-4 py-2 text-center">
+              <form method="POST" action="/marcar_pagado/{{ d.id }}" onsubmit="return confirm('¿Confirmar que ya pagó?');">
+                <input type="hidden" name="monto" value="{{ d.monto }}">
+                <input type="hidden" name="moneda" value="ARS">
+                <input type="hidden" name="metodo_pago" value="Deuda saldada">
+                <button type="submit"
+                  class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-xs">
+                  <i data-lucide="check-circle" class="w-4 h-4 inline"></i> Pagado
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="px-4 py-4 text-center text-gray-500">No hay deudores activos.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="text-center mt-10">
+      <a href="/cargar_producto" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded shadow transition">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i> <span>Volver</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

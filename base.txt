@@ -8,6 +8,20 @@ CREATE TABLE producto_chipola (
     vendido BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE transacciones_chipola (
+    id SERIAL PRIMARY KEY,
+    producto_id INTEGER REFERENCES producto_chipola(id),
+    metodo_pago TEXT,
+    monto NUMERIC,
+    moneda TEXT,
+    fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
 psql postgresql://negocio_54gh_user:lwclY7Am6oVOImETtdFwjbSRvRFXO6yr@dpg-cv8a1da3esus73ch8mrg-a.oregon-postgres.render.com/negocio_54gh
 
 INSERT INTO usuarios_chipola (usuario, contraseña) VALUES ('admin', '1234');
+INSERT INTO usuarios_chipola (usuario, contraseña) VALUES ('mayorista', '1234');
+
+ALTER TABLE usuarios_chipola ADD COLUMN rol TEXT;
+
