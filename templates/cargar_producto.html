@@ -17,6 +17,16 @@
   <script>
     window.onload = () => { lucide.createIcons(); };
   </script>
+  <!-- Android -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <!-- iOS -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="CHIPHONE">
+
 
 </head>
 <body class="bg-gray-950 text-gray-300 min-h-screen">
@@ -24,7 +34,6 @@
     <!-- Logo + Título -->
     <div class="flex items-center gap-3 w-full sm:w-auto">
       <img src="/static/images/logo.png" alt="Logo" class="h-10 w-auto rounded" /> <!-- Cambiá la ruta a tu logo real -->
-      <h1 class="text-xl font-bold text-white">ChipolaStore</h1>
     </div>
   
     <!-- Buscador -->
@@ -76,28 +85,35 @@
   <!-- Categorías visuales -->
 <div class="bg-gray-950 px-4 py-6">
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-    <a href="/cargar_producto?buscar=Celulares" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+    <a href="/cargar_producto?categoria=1" ... class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
       <img src="/static/categorias/celu.png" alt="Celulares" class="h-20 mx-auto object-contain">
       <h3 class="mt-3 font-semibold text-white">Celulares</h3>
     </a>
-    <a href="/cargar_producto?buscar=Videojuegos" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+    <a href="/cargar_producto?categoria=2" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
       <img src="/static/categorias/juegos.png" alt="Videojuegos" class="h-20 mx-auto object-contain">
       <h3 class="mt-3 font-semibold text-white">Videojuegos</h3>
     </a>
-    <a href="/cargar_producto?buscar=Computadoras" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+    <a href="/cargar_producto?categoria=3" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
       <img src="/static/categorias/compu.png" alt="Computadoras" class="h-20 mx-auto object-contain">
       <h3 class="mt-3 font-semibold text-white">Computadoras</h3>
     </a>
-    <a href="/cargar_producto?buscar=Audifonos" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
-      <img src="/static/categorias/auris.png" alt="Audífonos" class="h-20 mx-auto object-contain">
-      <h3 class="mt-3 font-semibold text-white">Audífonos</h3>
-    </a>
-    <a href="/cargar_producto?buscar=Smartwatch" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+    
+    <a href="/cargar_producto?categoria=4" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
       <img src="/static/categorias/reloj.png" alt="Smartwatch" class="h-20 mx-auto object-contain">
       <h3 class="mt-3 font-semibold text-white">Smartwatch</h3>
     </a>
+    <a href="/cargar_producto?categoria=5" class="bg-gray-800 hover:bg-gray-700 rounded-xl p-4 text-center shadow-md transition transform hover:scale-105">
+      <img src="/static/categorias/auris.png" alt="Otros" class="h-20 mx-auto object-contain">
+      <h3 class="mt-3 font-semibold text-white">Otros</h3>
+    </a>
   </div>
 </div>
+<div class="text-center mt-6">
+  <a href="/cargar_producto" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded shadow-md transition-all duration-200">
+    Ver todos los productos
+  </a>
+</div>
+
 
     
 
@@ -166,7 +182,7 @@
 
 <div class="absolute bottom-3 right-3 z-10">
   <a
-    href="https://wa.me/5493804315721?text={{ (
+    href="https://wa.me/5493804562912?text={{ (
       'Hola, estoy interesado en el producto: ' ~ producto.descripcion
       ~ (producto.memoria and ' - Memoria: ' ~ producto.memoria or '')
       ~ (producto.condicion_bateria and ' - Batería: ' ~ producto.condicion_bateria or '')
@@ -216,7 +232,15 @@
         <input type="number" name="precio_costo" placeholder="Precio de costo" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
         <input type="number" name="precio_reventa" placeholder="Precio de reventa" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
         <input type="number" name="precio_publico" placeholder="Precio al público" step="0.01" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
-
+        <select name="categoria_id" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
+          <option value="">Seleccionar categoría</option>
+          <option value="1">Celulares</option>
+          <option value="2">Videojuegos</option>
+          <option value="3">Computadoras</option>
+          <option value="4">Smartwatch</option>
+          <option value="5">Otros</option>
+        </select>
+        
         <input type="number" name="stock" placeholder="Stock" required min="1" class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white" />
         <input type="file" name="foto" accept="image/*" required class="w-full p-2 bg-white dark:bg-gray-800" />
         <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Guardar Producto</button>
@@ -261,7 +285,7 @@
         modal.classList.add('hidden');
       }, 300);
     }
-
+      
     // Alerta cuando se guarda o elimina producto
     document.addEventListener("DOMContentLoaded", function() {
       document.querySelector("#modal-producto form")?.addEventListener("submit", () => {
@@ -313,8 +337,8 @@
   {% if not admin %}
   <div class="fixed bottom-2 right-2 text-gray-400 text-xs bg-gray-800 bg-opacity-80 px-4 py-2 rounded shadow-md z-50 flex items-center gap-2">
     <span>Desarrollado por</span>
-    <a href="https://wa.me/5493804315721" target="_blank" class="text-green-400 hover:underline font-semibold">ServiCell</a>
-    <a href="https://wa.me/5493804315721" target="_blank" title="Contactar por WhatsApp">
+    <a href="https://wa.me/5493804562912" target="_blank" class="text-green-400 hover:underline font-semibold">ServiCell</a>
+    <a href="https://wa.me/5493804562912" target="_blank" title="Contactar por WhatsApp">
       <img src="https://img.icons8.com/ios-filled/20/25D366/whatsapp.png" alt="WhatsApp" />
     </a>
   </div>

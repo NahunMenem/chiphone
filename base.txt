@@ -25,3 +25,10 @@ INSERT INTO usuarios_chipola (usuario, contraseña) VALUES ('mayorista', '1234')
 
 ALTER TABLE usuarios_chipola ADD COLUMN rol TEXT;
 
+id |                                          foto                                          |  descripcion  | memoria | condicion_bateria | precio | vendido | estado  | stock | precio_costo | precio_reventa | precio_publico |   categoria   | categoria_id
+----+----------------------------------------------------------------------------------------+---------------+---------+-------------------+--------+---------+---------+-------+--------------+----------------+----------------+---------------+--------------
+ 5 | https://res.cloudinary.com/dqsacd9ez/image/upload/v1743699004/eadxluj5zucd5yimvbky.jpg | perfume arabe |         |                   |    350 | f       | Sellado |     0 |              |                |                | Sin categoría |            1
+ 30 | https://res.cloudinary.com/dqsacd9ez/image/upload/v1743969677/jlwaqczowdvzxxtzsnb3.jpg | Cortaplumas   |         |                   |        | f       | Sellado |     0 |       1500.0 |         2000.0 |         3500.0 | Sin categoría |            1
+ 13 | https://res.cloudinary.com/dqsacd9ez/image/upload/v1743803627/rw0j6kuvskis825ni0e1.jpg | Iphone 11     | 64      | 89                |    650 | f       | Usado   |     0 |              |                |                | Celulares     |            1
+ 26 | https://res.cloudinary.com/dqsacd9ez/image/upload/v1743909257/uekqfgqonjppa6bekjcv.jpg | Smartwatch    |         |                   |        | f       | Sellado |     0 |        100.0 |          150.0 |          300.0 | Sin categoría |            1
+(4 filas)

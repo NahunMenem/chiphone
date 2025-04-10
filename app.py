@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import psycopg2
 import os
 from datetime import datetime, date
+import pytz
+
 
 load_dotenv()
 
@@ -20,7 +22,12 @@ cloudinary.config(
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def obtener_conexion():
-    return psycopg2.connect(DATABASE_URL)
+    conn = psycopg2.connect(DATABASE_URL)
+    cur = conn.cursor()
+    cur.execute("SET TIME ZONE 'America/Argentina/Buenos_Aires'")
+    cur.close()
+    return conn
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -58,7 +65,7 @@ def editar_producto():
         return "Acceso denegado", 403
 
     id = request.form['id']
-    descripcion = request.form['descripcion']
+    descripcion = request.form['descripcion'].upper()
     memoria = request.form.get('memoria')
     condicion_bateria = request.form.get('condicion_bateria')
     estado = request.form['estado']
@@ -269,17 +276,26 @@ def marcar_pagado(id):
     # Marcar como pagado
     cur.execute("UPDATE deudores_chipola SET pagado = TRUE WHERE id = %s", (id,))
 
+    # Obtener nombre del cliente para mostrarlo en transacciones
+    cur.execute("SELECT cliente_nombre FROM deudores_chipola WHERE id = %s", (id,))
+    cliente = cur.fetchone()
+    nombre_cliente = cliente[0] if cliente else "Cliente desconocido"
+
     # Registrar en transacciones
+    fecha_actual = datetime.now(pytz.timezone("America/Argentina/Buenos_Aires"))
+
     cur.execute("""
-        INSERT INTO transacciones_chipola (metodo_pago, moneda, monto, fecha)
-        VALUES (%s, %s, %s, CURRENT_DATE)
-    """, (metodo_pago, moneda, monto))
+        INSERT INTO transacciones_chipola (metodo_pago, moneda, monto, fecha, producto)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (metodo_pago, moneda, monto, fecha_actual, f"Pago deuda - {nombre_cliente}"))
 
     conn.commit()
     cur.close()
     conn.close()
 
     return redirect('/deudores')
+
+
 
 
 import psycopg2.extras
@@ -338,14 +354,17 @@ def cargar_producto():
             precio_publico = float(request.form['precio_publico'])
             stock = int(request.form['stock'])
             estado = request.form['estado']
+            categoria_id = int(request.form['categoria_id'])
 
             conn = obtener_conexion()
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO producto_chipola 
-                (foto, descripcion, memoria, condicion_bateria, precio_costo, precio_reventa, precio_publico, stock, vendido, estado)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """, (url_imagen, descripcion, memoria, condicion_bateria, precio_costo, precio_reventa, precio_publico, stock, False, estado))
+                (foto, descripcion, memoria, condicion_bateria, precio_costo, 
+                 precio_reventa, precio_publico, stock, vendido, estado, categoria_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, FALSE, %s, %s)
+            """, (url_imagen, descripcion, memoria, condicion_bateria, precio_costo, 
+                  precio_reventa, precio_publico, stock, estado, categoria_id))
             conn.commit()
 
         except Exception as e:
@@ -354,27 +373,54 @@ def cargar_producto():
             print("ERROR EN SQL -->", e)
             return f"Error detectado: {str(e)}"
         finally:
-            if cur:
-                cur.close()
             if conn:
+                cur.close()
                 conn.close()
 
-        productos = obtener_productos_filtrados()
-        return render_template("cargar_producto.html",
-                               productos=productos,
-                               filtro='',
-                               admin=session.get('admin'),
-                               mayorista=session.get('mayorista'))
+        return redirect('/cargar_producto')
 
-    # Método GET
-    filtro = request.args.get('buscar', '')
-    productos = obtener_productos_filtrados(filtro)
+    # GET: filtrar por categoría si se envía el parámetro
+    categoria_id = request.args.get('categoria')
+    productos = []
+
+    conn = obtener_conexion()
+    cur = conn.cursor()
+
+    if categoria_id:
+        cur.execute("""
+            SELECT id, foto, descripcion, memoria, condicion_bateria,
+                   precio_costo, precio_reventa, precio_publico,
+                   stock, vendido, estado
+            FROM producto_chipola
+            WHERE stock > 0 AND categoria_id = %s
+        """, (categoria_id,))
+    else:
+        cur.execute("""
+            SELECT id, foto, descripcion, memoria, condicion_bateria,
+                   precio_costo, precio_reventa, precio_publico,
+                   stock, vendido, estado
+            FROM producto_chipola
+            WHERE stock > 0
+        """)
+
+    productos_db = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    for p in productos_db:
+        productos.append({
+            'id': p[0], 'foto': p[1], 'descripcion': p[2], 'memoria': p[3],
+            'condicion_bateria': p[4], 'precio_costo': p[5], 'precio_reventa': p[6],
+            'precio_publico': p[7], 'stock': p[8], 'vendido': p[9], 'estado': p[10]
+        })
 
     return render_template('cargar_producto.html',
                            productos=productos,
-                           filtro=filtro,
+                           filtro='',
                            admin=session.get('admin'),
                            mayorista=session.get('mayorista'))
+
+
 
  
 #---------------------------------------------------------------------------------------------------------
@@ -437,11 +483,14 @@ def registrar_venta():
         cur.execute("SELECT descripcion FROM producto_chipola WHERE id = %s", (producto_id,))
         producto_nombre = cur.fetchone()[0] if cur.rowcount > 0 else "Producto desconocido"
 
-        # Insertar en transacciones con descripción
+        # Obtener fecha y hora local en Argentina
+        fecha_actual = datetime.now(pytz.timezone("America/Argentina/Buenos_Aires"))
+
+# Insertar en transacciones con descripción
         cur.execute("""
             INSERT INTO transacciones_chipola (producto_id, metodo_pago, monto, moneda, fecha, producto)
-            VALUES (%s, %s, %s, %s, CURRENT_DATE, %s)
-        """, (producto_id, metodo_pago, monto, moneda, producto_nombre))
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (producto_id, metodo_pago, monto, moneda, fecha_actual, producto_nombre))
 
         # Actualizar stock del producto
         cur.execute("""

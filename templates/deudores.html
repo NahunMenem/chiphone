@@ -8,6 +8,16 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script>window.onload = () => { lucide.createIcons(); };</script>
+  <!-- Android -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+
+  <!-- iOS -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="CHIPHONE">
+
 </head>
 <body class="bg-gray-950 text-gray-300 min-h-screen">
   <div class="container mx-auto px-4 py-8 max-w-5xl">
@@ -97,15 +107,11 @@
             <td class="px-4 py-2">${{ "%.2f"|format(d.monto) }}</td>
             <td class="px-4 py-2">{{ d.fecha }}</td>
             <td class="px-4 py-2 text-center">
-              <form method="POST" action="/marcar_pagado/{{ d.id }}" onsubmit="return confirm('¿Confirmar que ya pagó?');">
-                <input type="hidden" name="monto" value="{{ d.monto }}">
-                <input type="hidden" name="moneda" value="ARS">
-                <input type="hidden" name="metodo_pago" value="Deuda saldada">
-                <button type="submit"
-                  class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-xs">
-                  <i data-lucide="check-circle" class="w-4 h-4 inline"></i> Pagado
-                </button>
-              </form>
+              <button onclick="abrirModalPago({{ d.id }}, '{{ d.monto }}')" 
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded text-xs">
+                <i data-lucide='check-circle' class='w-4 h-4 inline'></i> Pagado
+              </button>
+
             </td>
           </tr>
           {% else %}
@@ -122,4 +128,42 @@
     </div>
   </div>
 </body>
+<!-- Modal para confirmar pago -->
+<div id="modal-pago" class="hidden fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center">
+  <div class="bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-sm relative">
+    <button onclick="cerrarModalPago()"
+      class="absolute top-2 right-2 text-white bg-rose-600 hover:bg-rose-700 rounded-full px-2 py-1">
+      <i data-lucide="x" class="w-4 h-4"></i>
+    </button>
+    <h2 class="text-xl font-bold text-center mb-4">¿Cómo te pagó?</h2>
+    <form id="form-pago" method="POST">
+      <input type="hidden" name="monto" id="pago-monto">
+      <div class="mb-4">
+        <label class="block mb-1">Moneda</label>
+        <select name="moneda" id="pago-moneda" required class="w-full p-2 rounded bg-gray-200 dark:bg-gray-700 text-black dark:text-white">
+          <option value="ARS">Pesos (ARS)</option>
+          <option value="USD">Dólares (USD)</option>
+        </select>
+      </div>
+      <button type="submit"
+        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded">
+        Confirmar pago
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  function abrirModalPago(id, monto) {
+    const modal = document.getElementById('modal-pago');
+    modal.classList.remove('hidden');
+    document.getElementById('pago-monto').value = monto;
+    document.getElementById('form-pago').action = `/marcar_pagado/${id}`;
+  }
+
+  function cerrarModalPago() {
+    document.getElementById('modal-pago').classList.add('hidden');
+  }
+</script>
+
 </html>
