@@ -379,14 +379,23 @@ def cargar_producto():
 
         return redirect('/cargar_producto')
 
-    # GET: filtrar por categoría si se envía el parámetro
+    # GET: mostrar productos filtrados
     categoria_id = request.args.get('categoria')
+    filtro = request.args.get('buscar', '').lower()
     productos = []
 
     conn = obtener_conexion()
     cur = conn.cursor()
 
-    if categoria_id:
+    if categoria_id and filtro:
+        cur.execute("""
+            SELECT id, foto, descripcion, memoria, condicion_bateria,
+                   precio_costo, precio_reventa, precio_publico,
+                   stock, vendido, estado
+            FROM producto_chipola
+            WHERE stock > 0 AND categoria_id = %s AND LOWER(descripcion) LIKE %s
+        """, (categoria_id, f"%{filtro}%"))
+    elif categoria_id:
         cur.execute("""
             SELECT id, foto, descripcion, memoria, condicion_bateria,
                    precio_costo, precio_reventa, precio_publico,
@@ -394,6 +403,14 @@ def cargar_producto():
             FROM producto_chipola
             WHERE stock > 0 AND categoria_id = %s
         """, (categoria_id,))
+    elif filtro:
+        cur.execute("""
+            SELECT id, foto, descripcion, memoria, condicion_bateria,
+                   precio_costo, precio_reventa, precio_publico,
+                   stock, vendido, estado
+            FROM producto_chipola
+            WHERE stock > 0 AND LOWER(descripcion) LIKE %s
+        """, (f"%{filtro}%",))
     else:
         cur.execute("""
             SELECT id, foto, descripcion, memoria, condicion_bateria,
@@ -416,9 +433,10 @@ def cargar_producto():
 
     return render_template('cargar_producto.html',
                            productos=productos,
-                           filtro='',
+                           filtro=filtro,
                            admin=session.get('admin'),
                            mayorista=session.get('mayorista'))
+
 
 
 
